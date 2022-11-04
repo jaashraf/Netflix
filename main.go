@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const filepath = "Resources/netflix_titles.csv"
@@ -23,6 +24,33 @@ type NetflixData struct {
 	duration    string
 	listedIn    []string
 	description string
+}
+
+func main() {
+	csvData, _ := readCSV(filepath)
+	netlfixDataSlice := []NetflixData{}
+	for _, line := range csvData {
+		netlfixDataSlice = append(netlfixDataSlice, csvToNetflixDataObject(line))
+	}
+
+	var n int
+	fmt.Scanf("%d", &n)
+
+	typesInput := "TV Show"
+	listedInInput := "Horror Movies"
+	countryInput := "India"
+	startDate := "August 10, 2001"
+	endDate := "December 29, 2020"
+	fmt.Println(filterBYType(typesInput, netlfixDataSlice)[0:n], "\n\n\n\n")
+	fmt.Println(filterByListedIn(listedInInput, netlfixDataSlice)[0:n], "\n\n\n\n")
+	fmt.Println(filterByCountry(countryInput, netlfixDataSlice)[0:n], "\n\n\n\n")
+
+	netflixDataSortedByDateAdded, err := filterByAddedDate(startDate, endDate, netlfixDataSlice)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(netflixDataSortedByDateAdded[0:n])
+	}
 }
 
 func csvToNetflixDataObject(line []string) NetflixData {
@@ -97,20 +125,32 @@ func filterByCountry(countryName string, netflixDataArray []NetflixData) []Netfl
 	return resultNetflixData
 }
 
-func main() {
-	csvData, _ := readCSV(filepath)
-	netlfixDataSlice := []NetflixData{}
-	for _, line := range csvData {
-		netlfixDataSlice = append(netlfixDataSlice, csvToNetflixDataObject(line))
+func filterByAddedDate(startDate string, endDate string, netflixDataArray []NetflixData) ([]NetflixData, error) {
+	layout := "January 02, 2006"
+	sTime, er1 := time.Parse(layout, startDate)
+	eTime, er2 := time.Parse(layout, endDate)
+	resultNetflixData := []NetflixData{}
+
+	if er1 != nil {
+		return nil, er1
 	}
-	var n int
-	fmt.Scanf("%d", &n)
+	if er2 != nil {
+		return nil, er2
+	}
 
-	typesInput := "TV Show"
-	listedInInput := "Horror Movies"
-	countryInput := "India"
+	for _, data := range netflixDataArray {
+		if data.dateAdded == "date_added" {
+			continue
+		} else {
+			curTime, er3 := time.Parse(layout, data.dateAdded)
+			if er3 != nil {
+				return nil, er3
+			}
+			if sTime.UnixMilli() <= curTime.UnixMilli() && curTime.UnixMilli() <= eTime.UnixMilli() {
+				resultNetflixData = append(resultNetflixData, data)
+			}
+		}
 
-	fmt.Println(filterBYType(typesInput, netlfixDataSlice)[0:n], "\n\n\n\n")
-	fmt.Println(filterByListedIn(listedInInput, netlfixDataSlice)[0:n], "\n\n\n\n")
-	fmt.Println(filterByCountry(countryInput, netlfixDataSlice)[0:n], "\n\n\n\n")
+	}
+	return resultNetflixData, nil
 }
