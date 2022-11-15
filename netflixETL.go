@@ -2,14 +2,11 @@ package main
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
-
-const filepath = "Resources/netflix_titles.csv"
 
 type NetflixData struct {
 	showId      string
@@ -24,33 +21,6 @@ type NetflixData struct {
 	duration    string
 	listedIn    []string
 	description string
-}
-
-func main() {
-	csvData, _ := readCSV(filepath)
-	netlfixDataSlice := []NetflixData{}
-	for _, line := range csvData {
-		netlfixDataSlice = append(netlfixDataSlice, csvToNetflixDataObject(line))
-	}
-
-	var n int
-	fmt.Scanf("%d", &n)
-
-	typesInput := "TV Show"
-	listedInInput := "Horror Movies"
-	countryInput := "India"
-	startDate := "August 10, 2001"
-	endDate := "December 29, 2020"
-	fmt.Println(filterBYType(typesInput, netlfixDataSlice)[0:n], "\n\n\n\n")
-	fmt.Println(filterByListedIn(listedInInput, netlfixDataSlice)[0:n], "\n\n\n\n")
-	fmt.Println(filterByCountry(countryInput, netlfixDataSlice)[0:n], "\n\n\n\n")
-
-	netflixDataSortedByDateAdded, err := filterByAddedDate(startDate, endDate, netlfixDataSlice)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(netflixDataSortedByDateAdded[0:n])
-	}
 }
 
 func csvToNetflixDataObject(line []string) NetflixData {
@@ -77,7 +47,7 @@ func csvToNetflixDataObject(line []string) NetflixData {
 	return data
 }
 
-func readCSV(filename string) ([][]string, error) {
+func readCSVToObject(filename string) ([]NetflixData, error) {
 	content, e := os.Open(filename)
 	lines, err := csv.NewReader(content).ReadAll()
 
@@ -87,8 +57,12 @@ func readCSV(filename string) ([][]string, error) {
 		return nil, err
 	}
 
-	return lines, nil
+	netlfixDataSlice := []NetflixData{}
+	for _, line := range lines {
+		netlfixDataSlice = append(netlfixDataSlice, csvToNetflixDataObject(line))
+	}
 
+	return netlfixDataSlice, nil
 }
 
 func filterBYType(movieType string, netflixDataArray []NetflixData) []NetflixData {

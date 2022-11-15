@@ -1,15 +1,38 @@
 package main
 
 import (
-	"fmt"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 )
 
-func main() {
-	http.HandleFunc("/greet", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "welcome to netflix binge watching")
-	})
-	log.Fatal(http.ListenAndServe("localhost:8000", nil))
+const filepath = "Resources/netflix_titles.csv"
 
+func main() {
+	router := mux.NewRouter()
+	router.HandleFunc("/tvshows", getTVShowsApiHandler).Methods("GET")
+	log.Fatal(http.ListenAndServe("localhost:8000", router))
+
+}
+
+func getTVShowsByListedIn(listedIn string) ([]NetflixData, error) {
+	netflixTVShows, err := readCSVToObject(filepath)
+	if err == nil {
+		netflixTVShows = filterBYType("TV Show", netflixTVShows)
+		netflixTVShows = filterByListedIn(listedIn, netflixTVShows)
+		return netflixTVShows, nil
+	} else {
+		return nil, err
+	}
+}
+
+func getTVShowsByCountry(countryName string) ([]NetflixData, error) {
+	netflixTVShows, err := readCSVToObject(filepath)
+	if err == nil {
+		netflixTVShows = filterBYType("TV Show", netflixTVShows)
+		netflixTVShows = filterByCountry(countryName, netflixTVShows)
+		return netflixTVShows, nil
+	} else {
+		return nil, err
+	}
 }
