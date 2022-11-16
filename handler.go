@@ -10,9 +10,6 @@ import (
 	"time"
 )
 
-var netflixDataGlobal = []NetflixData{}
-var errGlobal error = nil
-
 func getTVShowsApiHandler(w http.ResponseWriter, r *http.Request) {
 	exeStartTime := time.Now()
 	if r.URL.Query().Has("n") {
