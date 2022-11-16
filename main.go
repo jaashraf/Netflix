@@ -25,25 +25,3 @@ func main() {
 	log.Fatal(http.ListenAndServe("localhost:8000", router))
 
 }
-
-func getTVShowsByListedIn(listedIn string) ([]NetflixData, error) {
-	netflixTVShows, err := readCSVToObject(filepath)
-	if err == nil {
-		netflixTVShows = filterBYType("TV Show", netflixTVShows)
-		netflixTVShows = filterByListedIn(listedIn, netflixTVShows)
-		return netflixTVShows, nil
-	} else {
-		return nil, err
-	}
-}
-
-func getTVShowsByCountry(countryName string) ([]NetflixData, error) {
-	netflixTVShows, err := readCSVToObject(filepath)
-	if err == nil {
-		netflixTVShows = filterBYType("TV Show", netflixTVShows)
-		netflixTVShows = filterByCountry(countryName, netflixTVShows)
-		return netflixTVShows, nil
-	} else {
-		return nil, err
-	}
-}
