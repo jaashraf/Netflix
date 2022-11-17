@@ -1,4 +1,4 @@
-FROM golang:1.19.2
+FROM golang:latest
 RUN mkdir /build
 WORKDIR /build
 
