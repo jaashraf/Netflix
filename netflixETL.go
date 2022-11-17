@@ -8,21 +8,6 @@ import (
 	"time"
 )
 
-type NetflixData struct {
-	showId      string
-	movieType   string
-	title       string
-	director    []string
-	cast        []string
-	country     []string
-	dateAdded   string
-	releaseYear int
-	rating      string
-	duration    string
-	listedIn    []string
-	description string
-}
-
 func csvToNetflixDataObject(line []string) NetflixData {
 
 	relYear, err := strconv.Atoi(line[7])

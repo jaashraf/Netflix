@@ -8,13 +8,14 @@ import (
 
 const filepath = "Resources/netflix_titles.csv"
 
-var netflixDataGlobal = []NetflixData{}
+var netflixDataGlobal []NetflixData
 var errGlobal error
 
 func main() {
 
 	excelToDBSyncScheduler()
 	router := mux.NewRouter()
+	router.HandleFunc("/addshow", addShowOnNetflix).Methods("POST")
 	router.HandleFunc("/tvshows", getTVShowsApiHandler).Methods("GET")
 	log.Fatal(http.ListenAndServe("localhost:8000", router))
 

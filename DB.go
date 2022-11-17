@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
@@ -63,7 +64,6 @@ func syncDB(netflixData []NetflixData) {
 				for _, cast := range temp.cast {
 					db.Exec("insert into cast (cast_name, show_id) values (?, ?)",
 						cast, temp.showId)
-
 				}
 				for _, country := range temp.country {
 					db.Exec("insert into country (country_name, show_id) values (?, ?)", country, temp.showId)
@@ -73,7 +73,7 @@ func syncDB(netflixData []NetflixData) {
 					fmt.Println(res, " ----", err)
 				}
 				for _, listedIn := range temp.listedIn {
-					db.Exec("insert into listed_in (listed_in_name, show_id) values (?, ?);", listedIn, temp.showId)
+					db.Exec("insert into listed_in (listed_in_name, show_id) values (?, ?)", listedIn, temp.showId)
 				}
 				count++
 			}
@@ -81,4 +81,91 @@ func syncDB(netflixData []NetflixData) {
 		log.Default().Print("Data sync from excel to database sucessful. ", count, " synced successfully")
 	}
 	closeDBConnection()
+}
+
+func filterByTypeAndCount(movieType string, count int) ([]NetflixData, error) {
+	openDBConnection()
+	resNetflix, errNetflix := db.Query("select * from NetflixData where movie_type=? limit ?", movieType, count)
+	if errNetflix == nil {
+		netflixDataArray := make([]NetflixData, 0, 10)
+		for resNetflix.Next() {
+			var netflixData NetflixData
+			resNetflix.Scan(&netflixData.showId, &netflixData.movieType,
+				&netflixData.title, &netflixData.dateAdded, &netflixData.releaseYear,
+				&netflixData.rating, &netflixData.duration, &netflixData.description)
+
+			res, _ := db.Query("select cast_name from cast where show_id = ?", netflixData.showId)
+			for res.Next() {
+				var castName string
+				res.Scan(&castName)
+				netflixData.cast = append(netflixData.cast, castName)
+			}
+			res, _ = db.Query("select director_name from director where show_id = ?", netflixData.showId)
+			for res.Next() {
+				var directorName string
+				res.Scan(&directorName)
+				netflixData.director = append(netflixData.director, directorName)
+			}
+			res, _ = db.Query("select country_name from country where show_id = ?", netflixData.showId)
+			for res.Next() {
+				var countryName string
+				res.Scan(&countryName)
+				netflixData.country = append(netflixData.country, countryName)
+			}
+			res, _ = db.Query("select listed_in_name from listed_in where show_id = ?", netflixData.showId)
+			for res.Next() {
+				var listedIn string
+				res.Scan(&listedIn)
+				netflixData.listedIn = append(netflixData.listedIn, listedIn)
+			}
+			netflixDataArray = append(netflixDataArray, netflixData)
+		}
+		return netflixDataArray, nil
+	}
+	return nil, errors.New("Cannot fetch data by Type")
+}
+
+func filterByTypeAndMovieType(movieType string) []NetflixData {
+	openDBConnection()
+	res, err := db.Query("SELECT n.show_id, n.movie_type, n.title, n.date_added, n.release_year, n.rating, n.duration, n.description from Netflix.NetflixData n join Netflix.listed_in l on n.show_id=l.show_id where n.movie_type like \"%TV%\" and l.listed_in_name like \"%Horror%\"")
+	var netflixData = make([]NetflixData, 0)
+	fmt.Println(err)
+	for res.Next() {
+		var temp NetflixData
+		res.Scan(&temp.showId, &temp.movieType, &temp.title, &temp.dateAdded, &temp.releaseYear, &temp.rating, &temp.duration, &temp.description)
+		dbListedInRes, _ := db.Query("select listed_in_name from listed_in where show_id=?", temp.showId)
+		dbCastRes, _ := db.Query("select cast_name from cast where show_id=?", temp.showId)
+		dbCountryRes, _ := db.Query("select country_name from country where  show_id=?", temp.showId)
+		dbdirectorRes, _ := db.Query("select director_name from director where show_id=?", temp.showId)
+		flag := true
+		for flag {
+			if dbListedInRes.Next() {
+				var listedIn string
+				dbListedInRes.Scan(&listedIn)
+				temp.listedIn = append(temp.listedIn, listedIn)
+			}
+			if dbCastRes.Next() {
+				var cast string
+				dbCastRes.Scan(&cast)
+				temp.cast = append(temp.cast, cast)
+			}
+			if dbCountryRes.Next() {
+				var country string
+				dbCountryRes.Scan(&country)
+				temp.country = append(temp.country, country)
+			}
+			if dbdirectorRes.Next() {
+				var director string
+				dbdirectorRes.Scan(&director)
+				temp.director = append(temp.director, director)
+			}
+
+			if !dbListedInRes.Next() && !dbdirectorRes.Next() && !dbCastRes.Next() && !dbCountryRes.Next() {
+				flag = false
+			}
+		}
+		netflixData = append(netflixData, temp)
+	}
+	closeDBConnection()
+	return netflixData
 }
