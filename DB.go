@@ -30,6 +30,10 @@ func closeDBConnection() {
 	}
 }
 
+func addNetflixShowToDB(netflixRequestData NetflixData) {
+
+}
+
 func syncDB(netflixData []NetflixData) {
 
 	openDBConnection()
@@ -55,25 +59,25 @@ func syncDB(netflixData []NetflixData) {
 		}
 		count := 0
 		for _, temp := range netflixData {
-			_, flag := showMap[temp.showId]
+			_, flag := showMap[temp.ShowId]
 			if flag {
 				continue
 			} else {
 				db.Exec("insert into NetflixData (show_id, movie_type, title, date_added, release_year, rating, duration, description) values (?, ?, ?, ?, ?, ?, ?, ?) ",
-					temp.showId, temp.movieType, temp.title, temp.dateAdded, temp.releaseYear, temp.rating, temp.duration, temp.description)
-				for _, cast := range temp.cast {
+					temp.ShowId, temp.MovieType, temp.Title, temp.DateAdded, temp.ReleaseYear, temp.Rating, temp.Duration, temp.Description)
+				for _, cast := range temp.Cast {
 					db.Exec("insert into cast (cast_name, show_id) values (?, ?)",
-						cast, temp.showId)
+						cast, temp.ShowId)
 				}
-				for _, country := range temp.country {
-					db.Exec("insert into country (country_name, show_id) values (?, ?)", country, temp.showId)
+				for _, country := range temp.Country {
+					db.Exec("insert into country (country_name, show_id) values (?, ?)", country, temp.ShowId)
 				}
-				for _, director := range temp.director {
-					res, err := db.Exec("insert into director (director_name, show_id) values (?, ?);", director, temp.showId)
+				for _, director := range temp.Director {
+					res, err := db.Exec("insert into director (director_name, show_id) values (?, ?);", director, temp.ShowId)
 					fmt.Println(res, " ----", err)
 				}
-				for _, listedIn := range temp.listedIn {
-					db.Exec("insert into listed_in (listed_in_name, show_id) values (?, ?)", listedIn, temp.showId)
+				for _, listedIn := range temp.ListedIn {
+					db.Exec("insert into listed_in (listed_in_name, show_id) values (?, ?)", listedIn, temp.ShowId)
 				}
 				count++
 			}
@@ -90,33 +94,33 @@ func filterByTypeAndCount(movieType string, count int) ([]NetflixData, error) {
 		netflixDataArray := make([]NetflixData, 0, 10)
 		for resNetflix.Next() {
 			var netflixData NetflixData
-			resNetflix.Scan(&netflixData.showId, &netflixData.movieType,
-				&netflixData.title, &netflixData.dateAdded, &netflixData.releaseYear,
-				&netflixData.rating, &netflixData.duration, &netflixData.description)
+			resNetflix.Scan(&netflixData.ShowId, &netflixData.MovieType,
+				&netflixData.Title, &netflixData.DateAdded, &netflixData.ReleaseYear,
+				&netflixData.Rating, &netflixData.Duration, &netflixData.Description)
 
-			res, _ := db.Query("select cast_name from cast where show_id = ?", netflixData.showId)
+			res, _ := db.Query("select cast_name from cast where show_id = ?", netflixData.ShowId)
 			for res.Next() {
 				var castName string
 				res.Scan(&castName)
-				netflixData.cast = append(netflixData.cast, castName)
+				netflixData.Cast = append(netflixData.Cast, castName)
 			}
-			res, _ = db.Query("select director_name from director where show_id = ?", netflixData.showId)
+			res, _ = db.Query("select director_name from director where show_id = ?", netflixData.ShowId)
 			for res.Next() {
 				var directorName string
 				res.Scan(&directorName)
-				netflixData.director = append(netflixData.director, directorName)
+				netflixData.Director = append(netflixData.Director, directorName)
 			}
-			res, _ = db.Query("select country_name from country where show_id = ?", netflixData.showId)
+			res, _ = db.Query("select country_name from country where show_id = ?", netflixData.ShowId)
 			for res.Next() {
 				var countryName string
 				res.Scan(&countryName)
-				netflixData.country = append(netflixData.country, countryName)
+				netflixData.Country = append(netflixData.Country, countryName)
 			}
-			res, _ = db.Query("select listed_in_name from listed_in where show_id = ?", netflixData.showId)
+			res, _ = db.Query("select listed_in_name from listed_in where show_id = ?", netflixData.ShowId)
 			for res.Next() {
 				var listedIn string
 				res.Scan(&listedIn)
-				netflixData.listedIn = append(netflixData.listedIn, listedIn)
+				netflixData.ListedIn = append(netflixData.ListedIn, listedIn)
 			}
 			netflixDataArray = append(netflixDataArray, netflixData)
 		}
@@ -132,32 +136,32 @@ func filterByTypeAndMovieType(movieType string) []NetflixData {
 	fmt.Println(err)
 	for res.Next() {
 		var temp NetflixData
-		res.Scan(&temp.showId, &temp.movieType, &temp.title, &temp.dateAdded, &temp.releaseYear, &temp.rating, &temp.duration, &temp.description)
-		dbListedInRes, _ := db.Query("select listed_in_name from listed_in where show_id=?", temp.showId)
-		dbCastRes, _ := db.Query("select cast_name from cast where show_id=?", temp.showId)
-		dbCountryRes, _ := db.Query("select country_name from country where  show_id=?", temp.showId)
-		dbdirectorRes, _ := db.Query("select director_name from director where show_id=?", temp.showId)
+		res.Scan(&temp.ShowId, &temp.MovieType, &temp.Title, &temp.DateAdded, &temp.ReleaseYear, &temp.Rating, &temp.Duration, &temp.Description)
+		dbListedInRes, _ := db.Query("select listed_in_name from listed_in where show_id=?", temp.ShowId)
+		dbCastRes, _ := db.Query("select cast_name from cast where show_id=?", temp.ShowId)
+		dbCountryRes, _ := db.Query("select country_name from country where  show_id=?", temp.ShowId)
+		dbdirectorRes, _ := db.Query("select director_name from director where show_id=?", temp.ShowId)
 		flag := true
 		for flag {
 			if dbListedInRes.Next() {
 				var listedIn string
 				dbListedInRes.Scan(&listedIn)
-				temp.listedIn = append(temp.listedIn, listedIn)
+				temp.ListedIn = append(temp.ListedIn, listedIn)
 			}
 			if dbCastRes.Next() {
 				var cast string
 				dbCastRes.Scan(&cast)
-				temp.cast = append(temp.cast, cast)
+				temp.Cast = append(temp.Cast, cast)
 			}
 			if dbCountryRes.Next() {
 				var country string
 				dbCountryRes.Scan(&country)
-				temp.country = append(temp.country, country)
+				temp.Country = append(temp.Country, country)
 			}
 			if dbdirectorRes.Next() {
 				var director string
 				dbdirectorRes.Scan(&director)
-				temp.director = append(temp.director, director)
+				temp.Director = append(temp.Director, director)
 			}
 
 			if !dbListedInRes.Next() && !dbdirectorRes.Next() && !dbCastRes.Next() && !dbCountryRes.Next() {

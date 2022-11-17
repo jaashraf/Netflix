@@ -16,18 +16,18 @@ func csvToNetflixDataObject(line []string) NetflixData {
 		relYear = -1
 	}
 	data := NetflixData{
-		showId:      line[0],
-		movieType:   line[1],
-		title:       line[2],
-		director:    strings.Split(line[3], ","),
-		cast:        strings.Split(line[4], ","),
-		country:     strings.Split(line[5], ","),
-		dateAdded:   line[6],
-		releaseYear: relYear,
-		rating:      line[8],
-		duration:    line[9],
-		listedIn:    strings.Split(line[10], ","),
-		description: line[11],
+		ShowId:      line[0],
+		MovieType:   line[1],
+		Title:       line[2],
+		Director:    strings.Split(line[3], ","),
+		Cast:        strings.Split(line[4], ","),
+		Country:     strings.Split(line[5], ","),
+		DateAdded:   line[6],
+		ReleaseYear: relYear,
+		Rating:      line[8],
+		Duration:    line[9],
+		ListedIn:    strings.Split(line[10], ","),
+		Description: line[11],
 	}
 	return data
 }
@@ -53,7 +53,7 @@ func readCSVToObject(filename string) ([]NetflixData, error) {
 func filterBYType(movieType string, netflixDataArray []NetflixData) []NetflixData {
 	resultNetflixData := []NetflixData{}
 	for _, data := range netflixDataArray {
-		if strings.Contains(strings.ToLower(data.movieType), strings.ToLower(movieType)) {
+		if strings.Contains(strings.ToLower(data.MovieType), strings.ToLower(movieType)) {
 			resultNetflixData = append(resultNetflixData, data)
 		}
 	}
@@ -63,7 +63,7 @@ func filterBYType(movieType string, netflixDataArray []NetflixData) []NetflixDat
 func filterByListedIn(listedIn string, netflixDataArray []NetflixData) []NetflixData {
 	resultNetflixData := []NetflixData{}
 	for _, data := range netflixDataArray {
-		for _, listedData := range data.listedIn {
+		for _, listedData := range data.ListedIn {
 			if strings.Contains(strings.ToLower(listedData), strings.ToLower(listedIn)) {
 				resultNetflixData = append(resultNetflixData, data)
 			}
@@ -75,7 +75,7 @@ func filterByListedIn(listedIn string, netflixDataArray []NetflixData) []Netflix
 func filterByCountry(countryName string, netflixDataArray []NetflixData) []NetflixData {
 	resultNetflixData := []NetflixData{}
 	for _, data := range netflixDataArray {
-		for _, countryData := range data.country {
+		for _, countryData := range data.Country {
 			if strings.Contains(strings.ToLower(countryData), strings.ToLower(countryName)) {
 				resultNetflixData = append(resultNetflixData, data)
 			}
@@ -98,10 +98,10 @@ func filterByAddedDate(startDate string, endDate string, netflixDataArray []Netf
 	}
 
 	for _, data := range netflixDataArray {
-		if data.dateAdded == "date_added" {
+		if data.DateAdded == "date_added" {
 			continue
 		} else {
-			curTime, er3 := time.Parse(layout, data.dateAdded)
+			curTime, er3 := time.Parse(layout, data.DateAdded)
 			if er3 != nil {
 				return nil, er3
 			}
